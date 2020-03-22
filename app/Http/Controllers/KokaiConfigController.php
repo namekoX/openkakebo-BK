@@ -9,7 +9,7 @@ class KokaiConfigController extends Controller
 {
     public function index()
     {
-        $user = getUser();
+        $user = getUserInfo();
         if (is_null($user)) {
             abort(401);
         }
@@ -26,7 +26,7 @@ class KokaiConfigController extends Controller
     {
         $req = request()->all();
         $id = request()->input('id');
-        $user = getUser();
+        $user = getUserInfo();
         if (is_null($user)) {
             abort(401);
         }

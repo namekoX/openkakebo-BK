@@ -18,12 +18,10 @@ class Cors
         $response = $next($request);
 
         $http_origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
-        if ($http_origin == 'http://localhost:3000') {
-            $response
-                ->header('Access-Control-Allow-Origin' , '*')
-                ->header('Access-Control-Allow-Headers', '*')
-                ->header('Access-Control-Allow-Methods', '*');
-        }
+        $response
+            ->header('Access-Control-Allow-Origin' , '*')
+            ->header('Access-Control-Allow-Headers', '*')
+            ->header('Access-Control-Allow-Methods', '*');
 
         return $response;
     }

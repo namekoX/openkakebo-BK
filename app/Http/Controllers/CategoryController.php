@@ -11,7 +11,7 @@ class CategoryController extends Controller
     public function index()
     {
         $kbn = request()->header("kbn");
-        $user = getUser();
+        $user = getUserInfo();
         if (is_null($user) || is_null($kbn)) {
             abort(401);
         }
@@ -38,7 +38,7 @@ class CategoryController extends Controller
     {
         $kbn = request()->header("kbn");
         $categories = request()->all();
-        $user = getUser();
+        $user = getUserInfo();
         if (is_null($user) || is_null($kbn)) {
             abort(401);
         }

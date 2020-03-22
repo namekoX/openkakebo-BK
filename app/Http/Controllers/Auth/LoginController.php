@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Category;
 use App\Http\Controllers\Controller;
+use App\KokaiConfig;
+use App\Koza;
 use App\Providers\RouteServiceProvider;
+use App\SubCategory;
+use App\User;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Support\Facades\Hash;
-use App\User;
 use Socialite;
-use App\Koza;
-use App\Category;
-use App\SubCategory;
-use App\KokaiConfig;
 
 class LoginController extends Controller
 {
@@ -24,7 +24,7 @@ class LoginController extends Controller
     | redirecting them to your home screen. The controller uses a trait
     | to conveniently provide its functionality to your applications.
     |
-    */
+     */
 
     use AuthenticatesUsers;
 
@@ -52,9 +52,9 @@ class LoginController extends Controller
 
     public function handleGoogleCallback()
     {
-        $gUser = Socialite::driver('google')->stateless()->user();
-        $user = User::where('email', $gUser->email)->first();
-        $token = $this->createToken($user);
+        $yUser = Socialite::driver('google')->stateless()->user();
+        $user = User::where('email', $yUser->email)->first();
+        $token = $this->createToken($user, $yUser);
         return redirect()->away(env('CLIENT_URL') . '/sociallogin/' . $token, 301, );
     }
 
@@ -67,7 +67,7 @@ class LoginController extends Controller
     {
         $yUser = Socialite::driver('yahoo')->stateless()->user();
         $user = User::where('email', $yUser->email)->first();
-        $token = $this->createToken($user);
+        $token = $this->createToken($user, $yUser);
         return redirect()->away(env('CLIENT_URL') . '/sociallogin/' . $token, 301, );
     }
 
@@ -92,7 +92,7 @@ class LoginController extends Controller
 
     public function getUser()
     {
-        $user = getUser();
+        $user = getUserInfo();
         if ($user) {
             $isSocial = ($user->password === '' ? true : false);
             $user['isSocial'] = $isSocial;
@@ -104,7 +104,7 @@ class LoginController extends Controller
 
     public function password()
     {
-        $user = getUser();
+        $user = getUserInfo();
         if (is_null($user)) {
             abort(401);
         }
@@ -113,10 +113,10 @@ class LoginController extends Controller
         if (is_null($password) || is_null($before_password) || !Hash::check($before_password, $user->password)) {
             abort(400);
         }
-        $user->password =  Hash::make($password);
+        $user->password = Hash::make($password);
         $user->save();
         $message = array('message' => '更新しました。');
-    
+
         return response()->json(
             $message,
             200, [],
@@ -126,7 +126,7 @@ class LoginController extends Controller
 
     public function mail()
     {
-        $user = getUser();
+        $user = getUserInfo();
         if (is_null($user)) {
             abort(401);
         }
@@ -135,11 +135,11 @@ class LoginController extends Controller
         if (is_null($mail) || $before_mail != $user->email) {
             abort(400);
         }
-        $user->email =  $mail;
+        $user->email = $mail;
         $user->email_verified_at = now();
         $user->save();
         $message = array('message' => '更新しました。');
-    
+
         return response()->json(
             $message,
             200, [],
@@ -171,8 +171,8 @@ class LoginController extends Controller
             $user = new User;
             $user->email = $email;
             $user->email_verified_at = now();
-            $user->password =  Hash::make($password);
-            $user->name = substr($email, 0, strcspn($email,'@'));
+            $user->password = Hash::make($password);
+            $user->name = substr($email, 0, strcspn($email, '@'));
             $token = str_random(64);
             $user->token = $token;
             $user->save();
@@ -187,31 +187,31 @@ class LoginController extends Controller
 
     private function createdefaultConfig($id)
     {
-        $this->createKoza($id , '財布');
+        $this->createKoza($id, '財布');
         $this->createKokaiConfig($id);
 
         $i = 0;
-        $this->createCategory($id , '0', '給与所得', $i++, ['月給','賞与','その他']);
-        $this->createCategory($id , '0', '事業所得', $i++, ['事業所得']);
-        $this->createCategory($id , '0', 'その他', $i++, ['その他']);
-        $this->createCategory($id , '1', '食費', $i++, ['食料品','外食','その他']);
-        $this->createCategory($id , '1', '雑費', $i++, ['消耗品','雑貨','家具','家電','その他']);
-        $this->createCategory($id , '1', '交通費', $i++, ['電車','タクシー','バス','飛行機','その他']);
-        $this->createCategory($id , '1', '交際費', $i++, ['付き合い','プレゼント','ご祝儀・香典','その他']);
-        $this->createCategory($id , '1', '娯楽費', $i++, ['旅行','お小遣い','イベント','音楽','書籍','その他']);
-        $this->createCategory($id , '1', '教育費', $i++, ['習い事','新聞','学費','書籍','仕送り','その他']);
-        $this->createCategory($id , '1', '美容・衣服', $i++, ['洋服','アクセサリー・小物','美容院','エステ','クリーニング','その他']);
-        $this->createCategory($id , '1', '医療・保険', $i++, ['病院','薬','保険','介護','その他']);
-        $this->createCategory($id , '1', '通信費', $i++, ['電話','インターネット','郵便・宅急便','その他']);
-        $this->createCategory($id , '1', '水道光熱費', $i++, ['水道','電気','ガス','その他']);
-        $this->createCategory($id , '1', '住宅費', $i++, ['家賃','ローン','保険','その他']);
-        $this->createCategory($id , '1', '車', $i++, ['ガソリン','駐車場','保険','税金','ローン','高速代','その他']);
-        $this->createCategory($id , '1', '税金', $i++, ['年金','所得税','消費税','住民税','個人事業税','その他']);
-        $this->createCategory($id , '1', 'その他', $i++, ['使途不明金','立替金','その他']);
-        $this->createCategory($id , '1', '未分類', $i++, ['未分類']); 
+        $this->createCategory($id, '0', '給与所得', $i++, ['月給', '賞与', 'その他']);
+        $this->createCategory($id, '0', '事業所得', $i++, ['事業所得']);
+        $this->createCategory($id, '0', 'その他収入', $i++, ['その他']);
+        $this->createCategory($id, '1', '食費', $i++, ['食料品', '外食', 'その他']);
+        $this->createCategory($id, '1', '雑費', $i++, ['消耗品', '雑貨', '家具', '家電', 'その他']);
+        $this->createCategory($id, '1', '交通費', $i++, ['電車', 'タクシー', 'バス', '飛行機', 'その他']);
+        $this->createCategory($id, '1', '交際費', $i++, ['付き合い', 'プレゼント', 'ご祝儀・香典', 'その他']);
+        $this->createCategory($id, '1', '娯楽費', $i++, ['旅行', 'お小遣い', 'イベント', '音楽', '書籍', 'その他']);
+        $this->createCategory($id, '1', '教育費', $i++, ['習い事', '新聞', '学費', '書籍', '仕送り', 'その他']);
+        $this->createCategory($id, '1', '美容・衣服', $i++, ['洋服', 'アクセサリー・小物', '美容院', 'エステ', 'クリーニング', 'その他']);
+        $this->createCategory($id, '1', '医療・保険', $i++, ['病院', '薬', '保険', '介護', 'その他']);
+        $this->createCategory($id, '1', '通信費', $i++, ['電話', 'インターネット', '郵便・宅急便', 'その他']);
+        $this->createCategory($id, '1', '水道光熱費', $i++, ['水道', '電気', 'ガス', 'その他']);
+        $this->createCategory($id, '1', '住宅費', $i++, ['家賃', 'ローン', '保険', 'その他']);
+        $this->createCategory($id, '1', '車', $i++, ['ガソリン', '駐車場', '保険', '税金', 'ローン', '高速代', 'その他']);
+        $this->createCategory($id, '1', '税金', $i++, ['年金', '所得税', '消費税', '住民税', '個人事業税', 'その他']);
+        $this->createCategory($id, '1', 'その他支出', $i++, ['使途不明金', '立替金', 'その他']);
     }
 
-    private function createKoza($id , $koza_name){
+    private function createKoza($id, $koza_name)
+    {
         $koza = new Koza;
         $koza->user_id = $id;
         $koza->koza_name = $koza_name;
@@ -220,7 +220,8 @@ class LoginController extends Controller
         $koza->save();
     }
 
-    private function createKokaiConfig($id){
+    private function createKokaiConfig($id)
+    {
         $kokaiconfig = new KokaiConfig;
         $kokaiconfig->user_id = $id;
         $kokaiconfig->is_open = '0';
@@ -229,11 +230,12 @@ class LoginController extends Controller
         $kokaiconfig->is_shishutu = '1';
         $kokaiconfig->is_shishutu_category = '1';
         $kokaiconfig->is_togetu = '0';
-        $kokaiconfig->is_zandaka = '0';     
+        $kokaiconfig->is_zandaka = '0';
         $kokaiconfig->save();
     }
 
-    private function createCategory($id , $category_kbn, $category_name, $category_order, $subcategoies){
+    private function createCategory($id, $category_kbn, $category_name, $category_order, $subcategoies)
+    {
         $category = new Category;
         $category->user_id = $id;
         $category->category_kbn = $category_kbn;
@@ -254,19 +256,21 @@ class LoginController extends Controller
     private function createUser($user)
     {
         $user = User::create([
-            'name'     => $user->name,
-            'email'    => $user->email,
+            'name' => $user->name,
+            'email' => $user->email,
             'password' => '',
         ]);
         return $user;
     }
 
-    private function createToken($user){
+    private function createToken($user, $yUser)
+    {
         if ($user == null) {
             $user = $this->createUser($yUser);
+            $this->createdefaultConfig($user->id);
         }
         if ($user->name == null) {
-            $user->name = substr($user->email, 0, strcspn($user->email,'@'));
+            $user->name = substr($user->email, 0, strcspn($user->email, '@'));
         }
         $token = str_random(64);
         $user->token = $token;

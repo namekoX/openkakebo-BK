@@ -12,7 +12,7 @@ class SummaryController extends Controller
 {
     public function index()
     {
-        $user = getUser();
+        $user = getUserInfo();
         if (is_null($user)) {
             abort(401);
         }
@@ -147,9 +147,12 @@ class SummaryController extends Controller
             // ページ非公開
             abort(403);
         }
+
+        $togetu = false;
         if (is_null($month)) {
             if ($config->is_togetu == '0') {
                 $month = date("Ym", strtotime("-1 month"));
+                $togetu = true;
             } else {
                 $month = date("Ym");
             }
@@ -269,6 +272,11 @@ class SummaryController extends Controller
         }
 
         $response['category'] = $rescategory;
+        $response['togetu'] = $togetu;
+        $response['is_shishutu'] = ($config->is_shishutu == '1');
+        $response['is_shunyu'] = ($config->is_shunyu == '1');
+        $response['is_shishutu_category'] = ($config->is_shishutu_category == '1');
+        $response['is_shunyu_category'] = ($config->is_shunyu_category == '1');
 
         return response()->json(
             $response,

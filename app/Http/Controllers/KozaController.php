@@ -9,7 +9,7 @@ class KozaController extends Controller
 {
     public function index()
     {
-        $user = getUser();
+        $user = getUserInfo();
         if (is_null($user)) {
             abort(401);
         }
@@ -25,7 +25,7 @@ class KozaController extends Controller
     public function update()
     {
         $kozas = request()->all();
-        $user = getUser();
+        $user = getUserInfo();
         if (is_null($user)) {
             abort(401);
         }

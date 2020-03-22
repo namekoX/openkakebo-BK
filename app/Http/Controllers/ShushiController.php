@@ -10,7 +10,7 @@ class ShushiController extends Controller
 {
     public function index()
     {
-        $user = getUser();
+        $user = getUserInfo();
         if (is_null($user)) {
             abort(401);
         }
@@ -62,7 +62,7 @@ class ShushiController extends Controller
     public function store()
     {
         $req = request()->all();
-        $user = getUser();
+        $user = getUserInfo();
         $shushi = new Shushi;
         $kbn = request()->input('shushi_kbn');
         $kingaku = request()->input('kingaku', 0);
@@ -111,7 +111,7 @@ class ShushiController extends Controller
     public function update()
     {
         $req = request()->all();
-        $user = getUser();
+        $user = getUserInfo();
         $id = request()->input('id');
         $kbn = request()->input('shushi_kbn');
         $kingaku = request()->input('kingaku', 0);
@@ -162,12 +162,15 @@ class ShushiController extends Controller
     public function delete()
     {
         $req = request()->all();
-        $user = getUser();
+        $user = getUserInfo();
         $id = request()->input('id');
         $kbn = request()->input('shushi_kbn');
-        $koza_id = request()->input('koza_id');
-        $before_koza_id = request()->input('before_koza_id');
-        $koza = Koza::find($koza_id);
+        $koza = request()->input('koza');
+        $koza_id = $koza['id'];
+        $before_koza_id = $koza['before_koza_id'];
+        if (isset($koza_id)){
+            $koza = Koza::find($koza_id);
+        }
         if (isset($before_koza_id)){
             $before_koza = Koza::find($before_koza_id);
         }
@@ -177,25 +180,25 @@ class ShushiController extends Controller
         }
         $shushi = Shushi::where('user_id', $user->id)->where('id', $id)->first();
 
-        if ($user->id != $req['user_id'] || is_null($kbn) || is_null($koza) 
-            || $koza->user_id != $req['user_id'] || is_null($shushi)) {
+        if ($user->id != $req['user_id'] || is_null($kbn) || is_null($shushi)) {
             abort(400);
         }
 
-        if($kbn == '0'){
-            // 収入
-            $koza->zandaka -= $shushi->kingaku;
-        } elseif($kbn == '1'){
-            // 支出
-            $koza->zandaka += $shushi->kingaku;
-        } else{
-            // 振替
-            if (is_null($before_koza) || $before_koza->user_id != $req['user_id']) {
-                abort(400);
+        if (isset($koza)){
+            if($kbn == '0'){
+                // 収入
+                $koza->zandaka -= $shushi->kingaku;
+            } elseif($kbn == '1'){
+                // 支出
+                $koza->zandaka += $shushi->kingaku;
+            } else{
+                // 振替
+                if (isset($before_koza)) {
+                    $koza->zandaka -= $shushi->kingaku;
+                    $before_koza->zandaka += $shushi->kingaku;
+                    $before_koza->save();
+                }
             }
-            $koza->zandaka -= $shushi->kingaku;
-            $before_koza->zandaka += $shushi->kingaku;
-            $before_koza->save();
         }
         
         $shushi->delete();

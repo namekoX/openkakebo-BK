@@ -58,7 +58,7 @@ Route::get('summary', 'SummaryController@index')->name('summary.index');
 Route::options("public", function () {});
 Route::get('public', 'SummaryController@public')->name('summary.public');
 
-function getUser()
+function getUserInfo()
 {
     $req = request();
     $token = request()->bearerToken();
@@ -66,6 +66,6 @@ function getUser()
     if ($token && $user) {
         return $user;
     } else {
-        return null;        
+        return null;
     }
-};
+}
